@@ -116,11 +116,13 @@ class BacktestingEngine:
         st.pyplot(fig)
 
 # Streamlit UI
-st.title('Backtesting Application')
+st.title('Scrappy Backtester')
 
 st.markdown("""
-### Welcome to the Backtesting Application 🚀
-This tool allows you to test different **trading strategies** on historical market data. 
+### Hello there! Thanks for stopping by! 
+#### Let's play with those stocks on the market shall we? 🚀
+This simple tool allows you to test different **trading strategies** on historical market data.
+             
 Simply choose a **stock ticker**, set your **date range**, and select a **strategy** from the sidebar.
 
 ### Available Strategies:
@@ -134,17 +136,28 @@ Hit **Run Backtest** to see how the strategy performs over time! 📈
 """)
 
 with st.sidebar:
-    st.title('Developed by Sumanth Bharadwaj')
-    st.text("Please Enter your inputs")
+    
+    st.title("Have a crack at it!")
 
-    st.sidebar.markdown("[![LinkedIn](https://img.shields.io/badge/LinkedIn-Profile-blue?style=flat&logo=linkedin)](https://www.linkedin.com/in/hksb4602)")
+    
 
     symbol = st.text_input('Enter Ticker Symbol', 'AAPL')
     start_date = st.date_input('Start Date', pd.to_datetime('2020-01-01'))
     end_date = st.date_input('End Date', pd.to_datetime('2021-01-01'))
     money = st.number_input('Cash Flow', 100000)
     strategy = st.selectbox('Select Strategy', ['SMA Crossover', 'Bollinger Bands', 'RSI', 'MACD', 'Mean Reversion'])
+    if strategy == "RSI":
+        rsi_low = st.number_input('Lower Bound', 30)
+        rsi_high = st.number_input('Upper Bound', 70)
+
     run_backtest = st.button('Run Backtest')
+
+    st.text("")
+    st.text("")
+    st.text('Developed by')
+    st.title('Sumanth Bharadwaj')
+
+    st.sidebar.markdown("[![LinkedIn](https://img.shields.io/badge/LinkedIn-Profile-blue?style=flat&logo=linkedin)](https://www.linkedin.com/in/hksb4602)")
 
 if run_backtest:
     data = load_market_data(symbol, start_date, end_date)
@@ -160,7 +173,7 @@ if run_backtest:
             data['signal'] = np.where(data['Close'][symbol] < bollinger.bollinger_lband(), 1, np.where(data['Close'][symbol] > bollinger.bollinger_hband(), -1, 0))
         elif strategy == 'RSI':
             data['rsi'] = ta.momentum.RSIIndicator(data['Close'][symbol], window=14).rsi()
-            data['signal'] = np.where(data['rsi'] < 30, 1, np.where(data['rsi'] > 70, -1, 0))
+            data['signal'] = np.where(data['rsi'] < rsi_low, 1, np.where(data['rsi'] > rsi_high, -1, 0))
         elif strategy == 'MACD':
             macd = ta.trend.MACD(data['Close'][symbol], window_slow=26, window_fast=12, window_sign=9)
             data['signal'] = np.where(macd.macd() > macd.macd_signal(), 1, np.where(macd.macd() < macd.macd_signal(), -1, 0))
